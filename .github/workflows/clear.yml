@@ -70,6 +70,10 @@ jobs:
                            -e SECURITY_TOMOYO \
                            -e SECURITY_APPARMOR \
                            -e SECURITY_YAMA
+            scripts/config -e DEBUG_INFO_NONE \
+                           -d DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT \
+                           -d DEBUG_INFO_DWARF4 \
+                           -d DEBUG_INFO_DWARF5
 
         - name: Build
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
