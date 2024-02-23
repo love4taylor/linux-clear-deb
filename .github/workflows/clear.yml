@@ -14,15 +14,17 @@ on:
 env:
   HOME: /home/runner
   KERNEL_STABLE_VER: 6.7.5
+  PKGVER: 1
 
 jobs:
     build:
       runs-on: self-hosted
       steps:
         - uses: actions/checkout@v4
-        - name: Checkout Linux Kernel ${{ env.KERNEL_STABLE_VER }}
+        - name: Download linux kernel ${{ env.KERNEL_STABLE_VER }} source
           run: |
-            git clone --depth 1 --branch v${{ env.KERNEL_STABLE_VER }} https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux linux-${{ env.KERNEL_STABLE_VER }}
+            wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${{ env.KERNEL_STABLE_VER }}.tar.xz \
+              && tar xvf linux-${{ env.KERNEL_STABLE_VER }}.tar.xz
 
         - name: Setup dependencies
           run: |
@@ -32,7 +34,7 @@ jobs:
                  libelf-dev libssl-dev dwarves bison \
                  gawk openssl libssl-dev dkms libudev-dev \
                  libpci-dev libiberty-dev autoconf \
-                 rpm debhelper lz4
+                 debhelper lz4
 
         - name: Apply patch
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
@@ -43,7 +45,6 @@ jobs:
              && for i in $(grep '^Patch' ../clear-patches/linux.spec |\
                   grep -Ev '^Patch0132|^Patch0118|^Patch0113|^Patch0138|^Patch0139' | sed -n 's/.*: //p'); do
                     patch -Np1 -i "../clear-patches/${i}"
-                    git commit -am "[PATCH]: clearlinux-pkgs/linux/${i}"
                 done
 
         - name: Copy .config and setup some config
@@ -78,15 +79,11 @@ jobs:
         - name: Build
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
           env:
-            KBUILD_BUILD_TIMESTAMP: ''
             KDEB_COMPRESS: "xz"
           run: |
+            make olddefconfig
             make \
-              LOCALVERSION="" \
-              olddefconfig
-            # Build deb
-            make \
-              LOCALVERSION="" \
+              KDEB_PKGVERSION=$(make kernelversion)-${{ env.PKGVER }} \
               -j`nproc` \
               bindeb-pkg
         
@@ -109,5 +106,5 @@ jobs:
             artifacts: linux-*.deb
             prerelease: ${{ github.event.inputs.release == 'pre-release' }}
             makeLatest: ${{ github.event.inputs.release == 'release' }}
-            tag: v${{ env.KERNEL_STABLE_VER }}-clear
+            tag: ${{ env.KERNEL_STABLE_VER }}-${{ env.PKGVER }}
 
