@@ -41,7 +41,7 @@ jobs:
           run: |
             git config user.name "GitHub Actions"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git clone https://github.com/clearlinux-pkgs/linux.git ../clear-patches \
+            git clone --depth 1 https://github.com/clearlinux-pkgs/linux.git ../clear-patches \
              && for i in $(grep '^Patch' ../clear-patches/linux.spec |\
                   grep -Ev '^Patch0132|^Patch0118|^Patch0113|^Patch0138|^Patch0139' | sed -n 's/.*: //p'); do
                     patch -Np1 -i "../clear-patches/${i}"
@@ -83,6 +83,7 @@ jobs:
         - name: Build
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
           env:
+            DEBEMAIL: "love4taylor <i@love4taylor.com>"
             KDEB_COMPRESS: "xz"
           run: |
             make \
