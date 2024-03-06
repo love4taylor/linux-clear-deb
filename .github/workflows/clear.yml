@@ -34,23 +34,20 @@ jobs:
                  libelf-dev libssl-dev dwarves bison \
                  gawk openssl libssl-dev dkms libudev-dev \
                  libpci-dev libiberty-dev autoconf \
-                 debhelper lz4 gcc-14
+                 debhelper lz4
 
         - name: Apply patch
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
           run: |
             git config user.name "GitHub Actions"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git clone https://github.com/graysky2/kernel_compiler_patch.git ../kernel_compiler_patch \
+             && patch -Np1 -i ../kernel_compiler_patch/more-uarches-for-kernel-6.1.79-6.8-rc3.patch
             git clone --depth 1 https://github.com/clearlinux-pkgs/linux.git ../clear-patches \
              && for i in $(grep '^Patch' ../clear-patches/linux.spec |\
                   grep -Ev '^Patch0132|^Patch0118|^Patch0113|^Patch0138|^Patch0139' | sed -n 's/.*: //p'); do
                     patch -Np1 -i "../clear-patches/${i}"
                 done
-            git clone --depth 1 --branch 6.7 https://anongit.gentoo.org/git/proj/linux-patches.git ../gentoo-patches \
-             && patch -Np1 -i ../gentoo-patches/2930_gcc14-btrfs-fix-kvcalloc-args-order.patch \
-             && patch -Np1 -i ../gentoo-patches/2931_gcc14-drm-i915-Adapt-to-Walloc-size.patch \
-             && patch -Np1 -i ../gentoo-patches/2932_gcc14-objtool-Fix-calloc-call-for-new-Walloc-size.patch \
-             && patch -Np1 -i ../gentoo-patches/5010_enable-cpu-optimizations-universal.patch
 
         - name: Copy .config and setup some config
           working-directory: linux-${{ env.KERNEL_STABLE_VER }}
@@ -87,14 +84,9 @@ jobs:
             DEBEMAIL: "love4taylor <i@love4taylor.com>"
             KDEB_COMPRESS: "xz"
           run: |
-            make \
-              CC="gcc-14" \
-              HOSTCC="gcc-14" \
-              olddefconfig
+            make olddefconfig
             make \
               KDEB_PKGVERSION=$(make kernelversion)-${{ env.PKGVER }} \
-              CC="gcc-14" \
-              HOSTCC="gcc-14" \
               -j`nproc` \
               bindeb-pkg
         
