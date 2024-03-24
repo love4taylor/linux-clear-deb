@@ -42,7 +42,7 @@ jobs:
             git config user.name "GitHub Actions"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git clone https://github.com/graysky2/kernel_compiler_patch.git ../kernel_compiler_patch \
-             && patch -Np1 -i ../kernel_compiler_patch/more-uarches-for-kernel-6.1.79-6.8-rc3.patch
+             && patch -Np1 -i ../kernel_compiler_patch/more-uarches-for-kernel-6.8-rc4+.patch
             git clone --depth 1 https://github.com/clearlinux-pkgs/linux.git ../clear-patches \
              && for i in $(grep '^Patch' ../clear-patches/linux.spec |\
                   grep -Ev '^Patch0132|^Patch0118|^Patch0113|^Patch0138|^Patch0139'|'Patch0109' | sed -n 's/.*: //p'); do
